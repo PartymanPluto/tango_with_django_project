@@ -1,0 +1,34 @@
+<!-- -*- coding: utf-8 -*-
+""""
+"Created on Wed Jan 23 21:41:33 2019
+
+@author: thero
+"""" -->
+
+<DOCTYPE html>
+
+{% load staticfiles %}
+
+<html>
+
+    <head>
+        <title>Rango</title>
+        
+    </head>
+    
+    <body>
+        <h1>Rango says...</hi>
+        
+        <div>
+            hey there partner! <br />
+            <strong>{{ boldmessage }}</strong><br />
+        </div>
+        
+        <div>
+            <a href="/rango/about/">About</a><br />
+            <img src="{% static "images/mascot-index.jpg" %}"
+                 alt="Picture of our mascot Rango" />
+        </div>
+    </body>
+    
+</html>
