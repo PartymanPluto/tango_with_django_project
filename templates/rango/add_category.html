@@ -5,14 +5,15 @@ Created on Wed Feb  6 15:27:05 2019
 @author: thero
 """-->
 
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>Rango</title>
-    </head>
-    
-    <body>
-        <h1>Add a Category</h1>
+{% extends 'rango/base.html' %}
+{% load staticfiles %}
+
+{% block title_block %}
+    Add Category
+{% endblock %}
+
+{% block body_block %}
+    <h1>Add a Category</h1>
         <div>
             <form id="category_form" method="post" action="/rango/add_category/">
                 {% csrf_token %}
@@ -26,9 +27,9 @@ Created on Wed Feb  6 15:27:05 2019
                 {% endfor %}
                 <input type="submit" name="submit" value="Create Category" />
             </form>
-    </body>
-</html>
-
+        </div>
+{% endblock %}
+        
 
 
 

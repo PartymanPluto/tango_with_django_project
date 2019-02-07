@@ -1,0 +1,29 @@
+<!--# -*- coding: utf-8 -*-
+"""
+Created on Wed Feb  6 21:56:31 2019
+
+@author: thero
+"""-->
+
+<ul>
+{% if cats %}
+    {% for c in cats %}
+        {% if c == act_cat %}
+            <li>
+            <strong>
+            <a href="{% url 'show_category' c.slug %}">{{ c.name }}</a>
+            </strong>
+            </li>
+        {% else %}
+            <li>
+                <a href="{% url 'show_category' c.slug %}">{{ c.name }}</a>
+            </li>
+        {% endif %}
+    {% endfor %}
+{% else %}
+    <li><strong>There are no categories present.</strong></li>
+{% endif %}
+</ul>
+
+
+

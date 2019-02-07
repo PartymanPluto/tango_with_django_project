@@ -1,7 +1,11 @@
 from django.shortcuts import render
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
+from django.core.urlresolvers import reverse
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
 from rango.models import Category, Page
-from rango.forms import CategoryForm, PageForm
+from rango.forms import CategoryForm, PageForm, UserForm, UserProfileForm
 
 def index(request):
     #Queries the database for a list of ALL categories currently stored. Then 
@@ -16,8 +20,10 @@ def index(request):
     return render(request, 'rango/index.html', context = context_dict)
 
 def about(request):
-    context_dict = {'boldmessage': "This tutorial has been put together by Daniel McQuaid"}
-    return render(request, 'rango/about.html', context = context_dict)
+    #Prints out whether the method is a GET or a POST
+    print(request.method)
+    print(request.user)
+    return render(request, 'rango/about.html', {})
 
 def show_category(request, category_name_slug):
     context_dict = {}
@@ -43,6 +49,7 @@ def show_category(request, category_name_slug):
     #Go render the response and return it to the client.
     return render(request, 'rango/category.html', context_dict)
 
+@login_required
 def add_category(request):
     form = CategoryForm()
     
@@ -64,6 +71,7 @@ def add_category(request):
             
     return render(request, 'rango/add_category.html', {'form': form})
 
+@login_required
 def add_page(request, category_name_slug):
     try:
         category = Category.objects.get(slug=category_name_slug)
@@ -87,7 +95,135 @@ def add_page(request, category_name_slug):
     context_dict = {'form':form, 'category': category}
     return render(request, 'rango/add_page.html', context_dict)
     
-      
+def register(request):
+    #Boolean telling the template if the registration was successful.
+    registered = False
+    
+    if request.method == 'POST':
+        #Attempt to grab information from the raw form information.
+        user_form = UserForm(data=request.POST)
+        profile_form = UserProfileForm(data=request.POST)
+        
+        if user_form.is_valid() and profile_form.is_valid():
+            #Save the user's form data to the database.
+            user = user_form.save()
+            
+            #Now we hash the password with the set_password method.
+            #Once hashed, we can update the user object.
+            user.set_password(user.password)
+            user.save()
+            
+            #Now we deal with the UserProfile instance.
+            #Since we need to set the user attribute ourselves,
+            #we set commit=False.
+            profile = profile_form.save(commit=False)
+            profile.user = user
+            
+            #Check if a profile picture was given.
+            #Put it in the UserProfile model if there was.
+            if 'picture' in request.FILES:
+                profile.picture = request.FILES['picture']
+                
+            #Now we save the UserProfile model instance.
+            profile.save()
+            
+            #Update out boolean to show that registration was successful.
+            registered = True
+        
+        else:
+            #Invalid form(s), print problems to the terminal.
+            print(user_form.errors, profile_form.errors)
+    else:
+        #Not a HTTP POST, so we render our form using two ModelForm instances.
+        #These forms will be blank, ready for user input.
+        user_form = UserForm()
+        profile_form = UserProfileForm()
+        
+    #Render the template depending on the context.
+    return render(request,
+                  'rango/register.html',
+                  {'user_form': user_form,
+                   'profile_form': profile_form,
+                   'registered': registered})
+
+def user_login(request):
+    if request.method =='POST':
+        #Gather the username and password form the login form.
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        
+        #Use Django to check if the username/password combination 
+        #is valid and return a User object if it is.
+        
+        user = authenticate(username=username, password=password)
+        
+        if user:
+            #Is the account active?
+            if user.is_active:
+                #If the username/password combo is valid and the acount is
+                #active. Then we log the user in and return them to the 
+                #homepage.
+                login(request, user)
+                return HttpResponseRedirect(reverse('index'))
+            else:
+                #If account is inactive- then they cannot log into it.
+                return HttpResponse("Your Rango account is disabled.")
+        else:
+            #Bad login details were provided. So we can't log the user in.
+            #print("Invalid login details: {0}, {1}".format(username, password))
+            #return HttpResponse("Invalid login details supplied.")
+            if username_present(username) == True:
+                print("Invalid login details: {0}, {1}".format(username, \
+                      password))
+                return HttpResponse("Invalid username and password \
+                                    combination supplied.")
+                
+            else:print("Invalid login details: {0}, {1}".format(username, \
+                      password))
+            return HttpResponse("Unregistered username supplied.")
+                
+        #The reques isn't a HTTP POST, so display the login form again.
+    else:
+        #No context variables to pass to the template system,
+        #hence the blank dictionary object.
+        return render(request, 'rango/login.html', {})
+            
+@login_required
+def restricted(request):
+    return render(request, 'rango/restricted.html/', {})
+
+@login_required
+def user_logout(request):
+    #Since we know the user is logged in we can just log them out and return
+    #them to the homepage.
+    logout(request)
+    return HttpResponseRedirect(reverse('index'))
+
+#Method to determine whether a username is already in use or not.
+def username_present(username):
+    if User.objects.filter(username=username).exists():
+        return True
+    return False
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+     
         
         
         
