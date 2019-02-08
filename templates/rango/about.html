@@ -24,5 +24,10 @@ Created on Thu Jan 24 16:24:28 2019
         <img src="{{MEDIA_URL}}cat.jpg"
             alt="Rango's pet cat"/>
     </div>
+    {% if visits %}
+        <div>
+            Number of visitors to this site: {{ visits }}
+        </div>
+    {% endif %}
 {% endblock %}
     
